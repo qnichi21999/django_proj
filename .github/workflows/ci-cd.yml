@@ -1,0 +1,94 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+env:
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Django tests
+        run: python manage.py test
+
+  build-and-run:
+    name: Build and run Docker image
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: mock-django:${{ github.sha }}
+
+      - name: Run container
+        run: |
+          docker run -d --name mock-django -p 8000:8000 \
+            -e DJANGO_DEBUG=0 mock-django:${{ github.sha }}
+
+      - name: Wait for health check
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:8000/health/; then
+              echo "\nApp is up and healthy!"
+              exit 0
+            fi
+            echo "Waiting for app... ($i)"
+            sleep 2
+          done
+          echo "App failed to start"
+          docker logs mock-django
+          exit 1
+
+      - name: Show container logs
+        if: always()
+        run: docker logs mock-django || true
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f mock-django || true
+
+      # Push image to GitHub Container Registry on pushes to main.
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}

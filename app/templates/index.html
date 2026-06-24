@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mock Django · Гостевая книга</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif; max-width: 640px; margin: 0 auto;
+      padding: 2rem 1rem; background: #0f1117; color: #e6e6e6;
+    }
+    h1 { font-size: 1.6rem; }
+    .sub { color: #8a93a6; margin-top: -.6rem; }
+    form.post { display: grid; gap: .6rem; margin: 1.5rem 0; }
+    input, textarea, button {
+      font: inherit; padding: .6rem .8rem; border-radius: 8px;
+      border: 1px solid #2a2f3a; background: #161a23; color: #e6e6e6;
+    }
+    textarea { resize: vertical; min-height: 64px; }
+    button {
+      cursor: pointer; background: #3b82f6; border-color: #3b82f6;
+      color: #fff; font-weight: 600;
+    }
+    button:hover { background: #2f6fdb; }
+    .msg {
+      border: 1px solid #232834; border-radius: 10px; padding: .8rem 1rem;
+      margin: .6rem 0; background: #141821;
+    }
+    .msg .meta { color: #8a93a6; font-size: .8rem; display: flex; justify-content: space-between; }
+    .msg .name { color: #7dd3fc; font-weight: 600; }
+    .like { display: inline; }
+    .like button {
+      background: transparent; border: 1px solid #2a2f3a; color: #f9a8d4;
+      padding: .25rem .6rem; font-size: .85rem;
+    }
+    .like button:hover { border-color: #f9a8d4; }
+    .empty { color: #8a93a6; font-style: italic; }
+    footer { margin-top: 2rem; color: #6b7280; font-size: .8rem; }
+    a { color: #7dd3fc; }
+  </style>
+</head>
+<body>
+  <h1>📖 Гостевая книга</h1>
+  <p class="sub">Mock Django проект — оставь сообщение и полайкай чужие.</p>
+
+  <form class="post" method="post" action="{% url 'index' %}">
+    {% csrf_token %}
+    <input name="name" placeholder="Имя (необязательно)" maxlength="50">
+    <textarea name="text" placeholder="Что скажешь?" maxlength="280" required></textarea>
+    <button type="submit">Отправить</button>
+  </form>
+
+  {% for m in messages %}
+    <div class="msg">
+      <div class="meta">
+        <span class="name">{{ m.name }}</span>
+        <span>{{ m.created_at|date:"d.m.Y H:i" }}</span>
+      </div>
+      <p>{{ m.text }}</p>
+      <form class="like" method="post" action="{% url 'like' m.pk %}">
+        {% csrf_token %}
+        <button type="submit">❤ {{ m.likes }}</button>
+      </form>
+    </div>
+  {% empty %}
+    <p class="empty">Пока пусто. Будь первым!</p>
+  {% endfor %}
+
+  <footer>
+    JSON API: <a href="{% url 'api_messages' %}">/api/messages/</a> ·
+    Health: <a href="{% url 'health' %}">/health/</a>
+  </footer>
+</body>
+</html>
