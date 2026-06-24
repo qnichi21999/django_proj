@@ -1,0 +1,23 @@
+# Продакшен-вариант: не собирает образ, а тянет уже собранный в CI из GHCR.
+# Используется на VPS автодеплоем. Образ задаётся переменной IMAGE.
+services:
+  web:
+    image: "${IMAGE:-ghcr.io/OWNER/REPO:latest}"
+    container_name: mock-django
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DEBUG: "0"
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-*}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-dev-insecure-secret-key-change-me}"
+    volumes:
+      - db-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
