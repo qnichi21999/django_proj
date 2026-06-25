@@ -74,7 +74,6 @@ jobs:
         if: always()
         run: docker rm -f mock-django || true
 
-      # Push image to GitHub Container Registry on pushes to main.
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
@@ -97,7 +96,6 @@ jobs:
     name: Deploy to VPS
     needs: build-and-run
     runs-on: ubuntu-latest
-    # Деплоим только при пуше в main.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -119,18 +117,15 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
-          # Образ берётся уже собранный из GHCR — на сервере ничего не компилируется.
           script: |
             set -e
             mkdir -p /opt/mock-django
             cd /opt/mock-django
 
-            # docker-compose.prod.yml должен лежать на сервере (кладётся при первом деплое).
             export IMAGE="ghcr.io/${{ github.repository }}:${{ github.sha }}"
             export DJANGO_ALLOWED_HOSTS="${{ secrets.DJANGO_ALLOWED_HOSTS }}"
             export DJANGO_SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}"
 
-            # Логинимся в GHCR (нужно, если пакет приватный).
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             docker compose -f docker-compose.prod.yml pull

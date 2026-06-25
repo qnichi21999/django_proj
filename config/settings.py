@@ -1,4 +1,3 @@
-"""Minimal Django settings for the mock project."""
 import os
 from pathlib import Path
 
@@ -21,7 +20,6 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
 ]
 
-# Trust the configured hosts for CSRF (needed when served behind a domain/HTTPS).
 CSRF_TRUSTED_ORIGINS = [
     o
     for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")

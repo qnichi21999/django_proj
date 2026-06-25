@@ -14,5 +14,4 @@ RUN chmod +x entrypoint.sh && mkdir -p /data
 
 EXPOSE 8000
 
-# Applies migrations, then serves via gunicorn. Health endpoint: /health/
 CMD ["./entrypoint.sh"]
