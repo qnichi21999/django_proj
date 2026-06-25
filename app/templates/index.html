@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mock Django · Гостевая книга</title>
+  <title>Сообщения</title>
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -42,13 +42,12 @@
   </style>
 </head>
 <body>
-  <h1>📖 Гостевая книга</h1>
-  <p class="sub">Mock Django проект — оставь сообщение и полайкай чужие.</p>
+  <h1>Сообщения</h1>
 
   <form class="post" method="post" action="{% url 'index' %}">
     {% csrf_token %}
-    <input name="name" placeholder="Имя (необязательно)" maxlength="50">
-    <textarea name="text" placeholder="Что скажешь?" maxlength="280" required></textarea>
+    <input name="name" placeholder="Имя" maxlength="50">
+    <textarea name="text" placeholder="Сообщение" maxlength="280" required></textarea>
     <button type="submit">Отправить</button>
   </form>
 
@@ -65,7 +64,7 @@
       </form>
     </div>
   {% empty %}
-    <p class="empty">Пока пусто. Будь первым!</p>
+    <p class="empty">Нет сообщений</p>
   {% endfor %}
 
   <footer>
