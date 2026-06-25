@@ -8,7 +8,7 @@ class ViewsTestCase(TestCase):
     def test_index_renders(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Гостевая книга")
+        self.assertContains(response, "Сообщения")
 
     def test_health_returns_healthy(self):
         response = self.client.get(reverse("health"))
